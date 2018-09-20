@@ -1,0 +1,182 @@
+---
+title: "Analiza recenzji wina"
+output: html_notebook
+---
+
+# wstęp
+
+Nauczymy się pakietu tidyverse i przy okazji przeanalizujemy dane dotyczące recenzji win.
+
+## Ładujemy biblioteki
+
+```{r libs, message=F}
+library(tidyverse)
+library(mlr)
+```
+
+## wczytujemy dane
+
+Dane w formacie .csv wczytujemy biblioteką readr (częśc tidyverse)
+
+```{r dane, message=F}
+wine <- read_csv(file="winemag-data-130k-v2.csv")
+```
+
+## Zamiana na kategorie
+
+```{r factor}
+wine <- wine%>%mutate_at(vars(country, province, region_1, region_2,
+                      variety, winery, designation, taster_name),
+                 as.factor)
+```
+
+
+## Oglądamy wczytane dane
+
+```{r viewdata}
+glimpse(wine)
+summary(wine)
+```
+
+## braki w danych
+
+SPrawdzamy czy brakuje danych
+
+```{r NA}
+colSums(is.na(wine))
+```
+
+# Analiza - EDA
+
+Co nas interesuje w analizie:
+
+- z jakiego kraju jest najdrozsze wino?
+- z jakiego kraju jest najlepsze wino?
+- ktor recenzent psize najdluzsze opinie?
+- czy jest korelacja miedzy recenzentem i oceną?
+- czy recenzent jest powiazany z panstwem?
+- TOP 5 win ponizej 30zl
+- cena vs punkty
+- 5 najgorszych drogich win
+- czy lepsze wino dostaje dluzsza recenzje?
+- najczesciej wystepujace slowa w recenzjach?
+
+## Duplikaty?
+
+Usuwamy te wina ktore pojawiaja sie w ziorze po raz n-ty.
+
+```{r distinct}
+wine <- distinct(wine, title, .keep_all = T)
+```
+
+## filtrowanie danych
+
+Funkcja `filter` pozwala nam wybrac oserwacje spelniajace kryteria.
+
+```{r}
+wine %>% filter (points == 100)
+```
+
+Filtrowanie wg kilku kryteriow
+
+```{r}
+wine%>%filter(points>90, price < 10)
+```
+
+## selekcja kolumn
+
+```{r}
+wine<-wine%>%select(-X1)
+```
+
+## Rzeczy naj - funkcja top_n
+
+```{r}
+wine%>%top_n(n=20,wt=-price)%>%
+  arrange(-points)%>%
+  select(title,country,points,price)
+```
+
+# top 5 win ponizej 30 zl
+
+```{r}
+wine%>%mutate(price_pln=price * 3.8)%>%
+  filter(price_pln<30)%>%
+  top_n(n=5,wt=points)%>%
+  arrange(-points)%>%
+  select(title,country,points,price)
+```
+
+## 5 najgorszych drogich win
+
+```{r}
+wine%>%
+  top_n(n=100, wt=price)%>%
+  arrange(points)
+wine%>%mutate(cena_jakosc=price/points)%>%
+  arrange(-cena_jakosc)
+
+```
+
+## agregacja i grupowanie
+
+ktore panstwo ma srednio najlepsze wina?
+
+```{r}
+wine%>%group_by(country)%>%
+  summarise(srednia=mean(points),
+                 cena=mean(price, na.rm=T),
+                 N=n())%>%
+  arrange(-srednia)%>%
+  filter(N>100)
+```
+
+# ktory recenzent zrecenzowal najwiecej win? jka dal srednia ocene
+
+```{r}
+wine%>%
+  group_by(taster_name)%>%
+  summarise(N=n(),
+         ocena=mean(points),
+         cena_m=median(price,na.rm = T))%>%
+  arrange(-N)
+```
+
+## rocznik wina
+
+```{r}
+wine%>%
+  mutate(year=str_extract(title, pattern = "\\d{4}"))
+```
+
+## wybor 15 krajow
+
+```{r}
+wine.top15<-wine%>%
+  count(country)%>%
+  top_n(n=15,n)%>%
+  select(-n)%>%
+  inner_join(wine)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
