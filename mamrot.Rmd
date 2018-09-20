@@ -235,10 +235,7 @@ ggplot(leaders)+
 
 ```
 
-```{r}
-ggplot(wine.top15)+
-  geom_boxplot(aes())
-```
+
 
 ```{r}
 wine.top15%>%

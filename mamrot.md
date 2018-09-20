@@ -415,7 +415,7 @@ wine%>%
 
 ```r
 wine%>%
-  mutate(year=str_extract(title, pattern = "\\d{4}"))
+  mutate(year=as.integer(str_extract(title, pattern = "\\d{4}")))
 ```
 
 ```
@@ -434,7 +434,7 @@ wine%>%
 ## 10 France  This has g~ Les Natures     87    27 Alsace   Alsace   <NA>    
 ## # ... with 118,830 more rows, and 6 more variables: taster_name <fct>,
 ## #   taster_twitter_handle <chr>, title <chr>, variety <fct>, winery <fct>,
-## #   year <chr>
+## #   year <int>
 ```
 
 ## wybor 15 krajow
@@ -453,10 +453,158 @@ wine.top15<-wine%>%
 ```
 
 
+## wykresy
+
+
+```r
+ggplot(wine.top15)+
+  geom_bar(aes(x=country))+
+  coord_flip()+
+  labs(x="panstwo", y="licznik", title = "Udzial panstw w danych", caption = "źródło: opracowanie wlasne")
+```
+
+![](mamrot_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+
+
+```r
+ggplot(wine.top15)+
+  geom_bar(aes(x=fct_rev(fct_infreq(country))), col="blue", fill="blue", alpha=0.5)+
+  coord_flip()+
+  labs(x="panstwo", y="licznik", title = "Udzial panstw w danych", caption = "źródło: opracowanie wlasne")+
+  theme_bw()
+```
+
+![](mamrot_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
+
+## geom_point
+
+
+```r
+ggplot(wine.top15)+
+  geom_histogram(aes(x=points),binwidth=1)
+```
+
+![](mamrot_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
+
+
+```r
+ggplot(wine.top15)+
+  geom_jitter(aes(x=price,y=points),alpha=0.3)+
+  scale_x_log10()
+```
+
+```
+## Warning: Removed 8233 rows containing missing values (geom_point).
+```
+
+![](mamrot_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+
+
+```r
+ggplot(wine.top15)+
+  geom_hex(aes(x=price,y=points))+
+  scale_x_log10()
+```
+
+```
+## Warning: Removed 8233 rows containing non-finite values (stat_binhex).
+```
+
+![](mamrot_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
+
+
+## czy dluzsze recenzje to lepsze wino
+
+
+```r
+wine.top15%>%
+  mutate(len=str_length(description))%>%
+  ggplot()+
+  geom_smooth(aes(x=points,y=len,color=(country)), method = "lm")
+```
+
+![](mamrot_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
+
+## zadanie
+
+- narysuj wykres slupkowy dla poszczegolnych autorow recenzji
+
+
+```r
+ggplot(wine.top15)+
+  geom_bar(aes(x=fct_rev(fct_infreq(taster_name))), col="blue", fill="blue", alpha=0.5)+
+  coord_flip()+
+  labs(x="panstwo", y="licznik", title = "Udzial autorow w danych", caption = "źródło: opracowanie wlasne")+
+  theme_bw()
+```
+
+![](mamrot_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
+
+- odfiltruj z danych kraje US, FRANCE i Italy
+
+
+```r
+leaders<-wine.top15%>%filter(country %in% c("US","France","Italy"))
+ggplot(leaders)+
+  geom_jitter(aes(x=points,y=price, color=country),alpha=0.3)+
+  facet_grid(.~country)+
+   geom_smooth(aes(x=points,y=price)) +
+  coord_cartesian(ylim=c(0,500))
+```
+
+```
+## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+```
+
+```
+## Warning: Removed 6592 rows containing non-finite values (stat_smooth).
+```
+
+```
+## Warning: Removed 6592 rows containing missing values (geom_point).
+```
+
+![](mamrot_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
 
 
 
 
+```r
+wine.top15%>%
+  mutate(taster_name=fct_reorder(taster_name,points))%>%
+  ggplot()+
+  geom_boxplot(aes(x=taster_name,y=points, fill=taster_name))+
+  theme(axis.text.x=element_text(angle=90))
+```
+
+![](mamrot_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
+
+ tylko dla kazdego taster zrobic oddzielny wykres a na boxplotach pokazac kraj vs punkty
+ 
+
+```r
+leaders%>%
+  mutate(taster_name=fct_reorder(taster_name,points))%>%
+  ggplot()+
+  geom_boxplot(aes(x=country,y=points, fill=country))+
+  theme(axis.text.x=element_text(angle=90))+
+  facet_wrap(~taster_name)
+```
+
+![](mamrot_files/figure-html/unnamed-chunk-20-1.png)<!-- -->
+
+## heatmapa
+
+
+```r
+ggplot(wine.top15)+
+  geom_tile(aes(x=country, y = taster_name, fill=points))+
+  theme(axis.text.x=element_text(angle=90))
+```
+
+![](mamrot_files/figure-html/unnamed-chunk-21-1.png)<!-- -->
+
+# barplot "stacked"
 
 
 
