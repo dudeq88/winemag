@@ -148,7 +148,8 @@ wine%>%
 
 ```{r}
 wine%>%
-  mutate(year=str_extract(title, pattern = "\\d{4}"))
+  mutate(year=as.integer(str_extract(title, pattern = "\\d{4}")))
+         
 ```
 
 ## wybor 15 krajow
@@ -162,12 +163,115 @@ wine.top15<-wine%>%
 ```
 
 
+## wykresy
+
+```{r}
+ggplot(wine.top15)+
+  geom_bar(aes(x=country))+
+  coord_flip()+
+  labs(x="panstwo", y="licznik", title = "Udzial panstw w danych", caption = "źródło: opracowanie wlasne")
+  
+```
+
+```{r}
+ggplot(wine.top15)+
+  geom_bar(aes(x=fct_rev(fct_infreq(country))), col="blue", fill="blue", alpha=0.5)+
+  coord_flip()+
+  labs(x="panstwo", y="licznik", title = "Udzial panstw w danych", caption = "źródło: opracowanie wlasne")+
+  theme_bw()
+  
+```
+
+## geom_point
+
+```{r}
+ggplot(wine.top15)+
+  geom_histogram(aes(x=points),binwidth=1)
+```
+
+```{r}
+ggplot(wine.top15)+
+  geom_jitter(aes(x=price,y=points),alpha=0.3)+
+  scale_x_log10()
+```
+
+```{r}
+ggplot(wine.top15)+
+  geom_hex(aes(x=price,y=points))+
+  scale_x_log10()
+```
 
 
+## czy dluzsze recenzje to lepsze wino
 
+```{r}
+wine.top15%>%
+  mutate(len=str_length(description))%>%
+  ggplot()+
+  geom_smooth(aes(x=points,y=len,color=(country)), method = "lm")
+```
 
+## zadanie
 
+- narysuj wykres slupkowy dla poszczegolnych autorow recenzji
 
+```{r}
+ggplot(wine.top15)+
+  geom_bar(aes(x=fct_rev(fct_infreq(taster_name))), col="blue", fill="blue", alpha=0.5)+
+  coord_flip()+
+  labs(x="panstwo", y="licznik", title = "Udzial autorow w danych", caption = "źródło: opracowanie wlasne")+
+  theme_bw()
+```
+
+- odfiltruj z danych kraje US, FRANCE i Italy
+
+```{r}
+leaders<-wine.top15%>%filter(country %in% c("US","France","Italy"))
+ggplot(leaders)+
+  geom_jitter(aes(x=points,y=price, color=country),alpha=0.3)+
+  facet_grid(.~country)+
+   geom_smooth(aes(x=points,y=price)) +
+  coord_cartesian(ylim=c(0,500))
+
+```
+
+```{r}
+ggplot(wine.top15)+
+  geom_boxplot(aes())
+```
+
+```{r}
+wine.top15%>%
+  mutate(taster_name=fct_reorder(taster_name,points))%>%
+  ggplot()+
+  geom_boxplot(aes(x=taster_name,y=points, fill=taster_name))+
+  theme(axis.text.x=element_text(angle=90))
+```
+
+ tylko dla kazdego taster zrobic oddzielny wykres a na boxplotach pokazac kraj vs punkty
+ 
+```{r}
+leaders%>%
+  mutate(taster_name=fct_reorder(taster_name,points))%>%
+  ggplot()+
+  geom_boxplot(aes(x=country,y=points, fill=country))+
+  theme(axis.text.x=element_text(angle=90))+
+  facet_wrap(~taster_name)
+```
+
+## heatmapa
+
+```{r}
+ggplot(wine.top15)+
+  geom_tile(aes(x=country, y = taster_name, fill=points))+
+  theme(axis.text.x=element_text(angle=90))
+```
+
+# barplot "stacked"
+
+```{r}
+
+```
 
 
 
