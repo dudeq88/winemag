@@ -1,6 +1,8 @@
 ---
 title: "Analiza recenzji wina"
-output: html_notebook
+output: 
+  html_document:
+    keep_md: true
 ---
 
 # wstęp
